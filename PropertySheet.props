@@ -7,6 +7,10 @@
     <ClCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)glm;$(ProjectDir)assimp\include;$(ProjectDir)glew-1.10.0\include;$(ProjectDir)freeglut\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
+    <Link>
+      <AdditionalDependencies>assimp.lib;freeglut.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)assimp\lib\Debug;$(ProjectDir)glew-1.10.0\lib\Release\Win32;$(ProjectDir)freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
   </ItemDefinitionGroup>
   <ItemGroup />
 </Project>
