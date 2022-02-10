@@ -9,7 +9,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>assimp.lib;freeglut.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)assimp\lib\assimp-debug;$(ProjectDir)glew-1.10.0\lib\Release\Win32;$(ProjectDir)freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)assimp\lib\assimp-debug;$(ProjectDir)glew-1.10.0\lib\glew-release\Win32;$(ProjectDir)freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup />
