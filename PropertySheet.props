@@ -5,11 +5,11 @@
   <PropertyGroup />
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)glm;$(ProjectDir)assimp\include;$(ProjectDir)glew-1.10.0\include;$(ProjectDir)freeglut\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)libraries\glm;$(ProjectDir)libraries\assimp\include;$(ProjectDir)libraries\glew-1.10.0\include;$(ProjectDir)libraries\freeglut\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies>assimp.lib;freeglut.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)assimp\lib\assimp-debug;$(ProjectDir)glew-1.10.0\lib\glew-release\Win32;$(ProjectDir)freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)libraries\assimp\lib\assimp-debug;$(ProjectDir)libraries\glew-1.10.0\lib\glew-release\Win32;$(ProjectDir)libraries\freeglut\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup />
