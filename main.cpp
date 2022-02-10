@@ -26,7 +26,7 @@
 #include "utils/mesh.h"
 #include "utils/shaders.h"
 #include "utils/vbo.h"
-#include "main.h"
+
 
 
 /*----------------------------------------------------------------------------
