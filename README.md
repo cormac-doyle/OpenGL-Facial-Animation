@@ -1,4 +1,4 @@
-# OpenGL Airpalne Rotations
+# OpenGL Airplane Rotations
 
 Rotation of a plane model I created in Blender using Euleur Or Quaternion angles
 
