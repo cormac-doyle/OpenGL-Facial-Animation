@@ -18,6 +18,12 @@ mono_crash.*
 
 # Build results
 # [Dd]ebug/
+OpenGLStart.tlog/
+OpenGLStart.exe
+OpenGLStart.exe.recipe
+OpenGLStart.vcxproj.FileListAbsolute.txt
+vc142.idb
+
 [Dd]ebugPublic/
 # [Rr]elease/
 [Rr]eleases/
