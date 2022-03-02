@@ -1,6 +1,6 @@
 #pragma once
 
-ModelData generateObjectBufferMesh(const char* mesh, GLuint shaderProgramID) {
+void generateObjectBufferMesh(ModelData mesh_data, GLuint shaderProgramID) {
 	/*----------------------------------------------------------------------------
 	LOAD MESH HERE AND COPY INTO BUFFERS
 	----------------------------------------------------------------------------*/
@@ -8,9 +8,8 @@ ModelData generateObjectBufferMesh(const char* mesh, GLuint shaderProgramID) {
 	//Note: you may get an error "vector subscript out of range" if you are using this code for a mesh that doesnt have positions and normals
 	//Might be an idea to do a check for that before generating and binding the buffer.
 
-	ModelData mesh_data = load_mesh(mesh);
+	
 	unsigned int vp_vbo = 0;
-
 
 	GLuint loc1, loc2, loc3;
 	loc1 = glGetAttribLocation(shaderProgramID, "vertex_position");
@@ -46,5 +45,5 @@ ModelData generateObjectBufferMesh(const char* mesh, GLuint shaderProgramID) {
 	//	glBindBuffer (GL_ARRAY_BUFFER, vt_vbo);
 	//	glVertexAttribPointer (loc3, 2, GL_FLOAT, GL_FALSE, 0, NULL);
 
-	return mesh_data;
+	
 }
