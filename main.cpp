@@ -46,7 +46,7 @@ MESH TO LOAD
 // put the mesh in your project directory, or provide a filepath for it here
 #define MESH_NEUTRAL "models/high-res2/neutral.obj"
 
-
+std::vector<std::string> labels;
 std::vector<std::string> mesh_file_names{
 		"Mery_jaw_open.obj",
 		"Mery_kiss.obj",
@@ -83,34 +83,63 @@ using namespace std;
 GLuint shaderProgramID;
 
 unsigned int mesh_vao = 0;
-int width = 800;
-int height = 600;
+int width = 1200;
+int height = 900;
 static float aspect = width/ (float) height;
 
+ModelData mesh_data_neutral_original;
 ModelData mesh_data_neutral;
+
 std::vector < std::vector<glm::vec3> > deltaMs;
+std::vector<float> mWeights;
 ModelData mesh_data_jaw_open;
 
+void removeWordFromLine(std::string& line, const std::string& word)
+{
+	auto n = line.find(word);
+	if (n != std::string::npos)
+	{
+		line.erase(n, word.length());
+	}
+}
 
 bool activate = false;
+glm::vec3 rotate_face = glm::vec3(0, -10.0f, 0);
 void loadNeutral(glm::mat4& modelNeutral, int matrix_location)
 {
 
 	modelNeutral = glm::mat4(1.0f);
+	modelNeutral = glm::rotate(modelNeutral, glm::radians(rotate_face.y), glm::vec3(0, 1, 0));
+
 	generateObjectBufferMesh(mesh_data_neutral, shaderProgramID);
 
 	glUniformMatrix4fv(matrix_location, 1, GL_FALSE, glm::value_ptr(modelNeutral));
 	glDrawArrays(GL_TRIANGLES, 0, mesh_data_neutral.mPointCount);
 }
 
+void applyDeltaM(ModelData& mesh_data_neutral, std::vector<glm::vec3> deltaM, float weight)
+{
+	
+	for (unsigned int i = 0; i < mesh_data_neutral.mPointCount; i++) {
+		mesh_data_neutral.mVertices[i].x -= deltaM[i].x * weight;
+		mesh_data_neutral.mVertices[i].y -= deltaM[i].y * weight;
+		mesh_data_neutral.mVertices[i].z -= deltaM[i].z * weight;
+	}
+
+}
+
 void display() {
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGLUT_NewFrame();
 	
-	ImGui::Begin("Window");
-
-	ImGui::Text("A Sample Window");
-
+	ImGui::Begin("Facial Feature Weight Controls");
+	for (int i = 0; i < labels.size();i++) {
+		
+		ImGui::SliderFloat(labels[i].c_str(), &mWeights[i], 0.0f, 1.0f);
+		
+	}
+	ImGui::Text("Rotate Face:");
+	ImGui::SliderFloat(" ", &rotate_face.y, -180.0f, 180.0f);
 	ImGui::End();
 
 	ImGui::Render();
@@ -140,15 +169,18 @@ void display() {
 	glm::mat4 view = glm::mat4(1.0f);
 	glm::mat4 persp_proj = glm::perspective(45.0f, (float)width / (float)height, 0.1f, 1000.0f);
 	
-	view = glm::translate(view, glm::vec3(0.0, -20.0f, -50.0f));
+	view = glm::translate(view, glm::vec3(10.0, -20.0f, -50.0f));
 
 	// update uniforms & draw
 	glUniformMatrix4fv(proj_mat_location, 1, GL_FALSE, glm::value_ptr(persp_proj));
 	glUniformMatrix4fv(view_mat_location, 1, GL_FALSE, glm::value_ptr(view));
 
 
-	glm::mat4 modelPlane;
-	loadNeutral(modelPlane, matrix_location);
+
+	
+
+	glm::mat4 modelNeutralFace;
+	loadNeutral(modelNeutralFace, matrix_location);
 
 
 	
@@ -156,6 +188,8 @@ void display() {
 	glutSwapBuffers();
 	
 }
+
+
 
 
 
@@ -168,7 +202,11 @@ void updateScene() {
 	float delta = (curr_time - last_time) * 0.001f;
 	last_time = curr_time;
 
-	
+	mesh_data_neutral = mesh_data_neutral_original;
+	for (int i = 0; i < mesh_file_names.size(); i++) {
+		applyDeltaM(mesh_data_neutral, deltaMs[i], mWeights[i]);
+	}
+
 
 	// Draw the next frame
 	glutPostRedisplay();
@@ -188,14 +226,24 @@ void calcDeltaM(const char* MESH)
 		deltaM.push_back(vertice);
 	}
 	deltaMs.push_back(deltaM);
+	float weight = 0.0f;
+	mWeights.push_back(weight);
 }
 
 void init()
 {
+	for (std::string name: mesh_file_names) {
+		std::string label = name;
+		removeWordFromLine(label,".obj");
+		removeWordFromLine(label, "Mery_");
+
+		labels.push_back(label);
+	}
 	// Set up the shaders
 	shaderProgramID = CompileShaders();
 
 	mesh_data_neutral = load_mesh(MESH_NEUTRAL);
+	mesh_data_neutral_original = load_mesh(MESH_NEUTRAL);
 
 	std::cout << "Calculating deltaM vertices..." << std::endl;
 	for (std::string name : mesh_file_names) {
@@ -205,45 +253,17 @@ void init()
 	}
 	std::cout << "Finished loading deltaM vertices." << std::endl;
 
-	
 }
 
-void applyDeltaM(ModelData& mesh_data_neutral, std::vector<glm::vec3> deltaM, float weight)
-{
-	for (unsigned int i = 0; i < mesh_data_neutral.mPointCount; i++) {
-		mesh_data_neutral.mVertices[i].x -= deltaM[i].x * weight;
-		mesh_data_neutral.mVertices[i].y -= deltaM[i].y * weight;
-		mesh_data_neutral.mVertices[i].z -= deltaM[i].z * weight;
-	}
 
-}
 
 // Placeholder code for the keypress
 float rotate_speed = 10.0f;
 void keypress(unsigned char key, int x, int y) {
 
-	ImGui_ImplGLUT_KeyboardFunc(key, x, y);
+	//ImGui_ImplGLUT_KeyboardFunc(key, x, y);
 
-	if (key == 'y') {
-		
-		applyDeltaM(mesh_data_neutral, deltaMs[0], 0.1f);
-		
-	}
-	if (key == 'u') {
-
-		applyDeltaM(mesh_data_neutral, deltaMs[0], -0.1f);
-
-	}
-	if (key == 'h') {
-
-		applyDeltaM(mesh_data_neutral, deltaMs[1], 0.1f);
-
-	}
-	if (key == 'j') {
-
-		applyDeltaM(mesh_data_neutral, deltaMs[1], -0.1f);
-
-	}
+	
 	glutPostRedisplay();
 }
 
