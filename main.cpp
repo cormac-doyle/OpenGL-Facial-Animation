@@ -29,6 +29,8 @@
 #include "utils/vbo.h"
 #include "MAIN.H"
 
+#include "string"
+
 
 
 /*----------------------------------------------------------------------------
@@ -37,8 +39,34 @@ MESH TO LOAD
 // this mesh is a dae file format but you should be able to use any other format too, obj is typically what is used
 // put the mesh in your project directory, or provide a filepath for it here
 #define MESH_NEUTRAL "models/high-res2/neutral.obj"
-#define MESH_0 "models/high-res2/Mery_jaw_open.obj"
 
+
+std::vector<std::string> mesh_file_names{
+		"Mery_jaw_open.obj",
+		"Mery_kiss.obj",
+		"Mery_l_brow_lower.obj",
+		"Mery_l_brow_narrow.obj",
+		"Mery_l_brow_raise.obj",
+		"Mery_l_eye_closed.obj",
+		"Mery_l_eye_lower_open.obj",
+		"Mery_l_eye_upper_open.obj",
+		"Mery_l_nose_wrinkle.obj",
+		"Mery_l_puff.obj",
+		"Mery_l_sad.obj",
+		"Mery_l_smile.obj",
+		"Mery_l_suck.obj",
+		"Mery_r_brow_lower.obj",
+		"Mery_r_brow_narrow.obj",
+		"Mery_r_brow_raise.obj",
+		"Mery_r_eye_closed.obj",
+		"Mery_r_eye_lower_open.obj",
+		"Mery_r_eye_upper_open.obj",
+		"Mery_r_nose_wrinkle.obj",
+		"Mery_r_puff.obj",
+		"Mery_r_sad.obj",
+		"Mery_r_smile.obj",
+		"Mery_r_suck.obj"
+};
 
 /*----------------------------------------------------------------------------
 ----------------------------------------------------------------------------*/
@@ -54,7 +82,7 @@ int height = 600;
 
 
 ModelData mesh_data_neutral;
-std::vector<glm::vec3> deltaM;
+std::vector < std::vector<glm::vec3> > deltaMs;
 ModelData mesh_data_jaw_open;
 
 
@@ -121,20 +149,20 @@ void updateScene() {
 	glutPostRedisplay();
 }
 
-void getDeltaM(const char* MESH)
+void calcDeltaM(const char* MESH)
 {
 	mesh_data_jaw_open = load_mesh(MESH);
 	
-
+	std::vector<glm::vec3> deltaM;
 	for (unsigned int i = 0; i < mesh_data_neutral.mPointCount; i++) {
 		glm::vec3 vertice;
 		vertice.x = mesh_data_neutral.mVertices[i].x - mesh_data_jaw_open.mVertices[i].x;
 		vertice.y = mesh_data_neutral.mVertices[i].y - mesh_data_jaw_open.mVertices[i].y;
 		vertice.z = mesh_data_neutral.mVertices[i].z - mesh_data_jaw_open.mVertices[i].z;
-		std::cout << "deltaM  " << i << " " << glm::to_string(vertice) << std::endl;
 
 		deltaM.push_back(vertice);
 	}
+	deltaMs.push_back(deltaM);
 }
 
 void init()
@@ -144,10 +172,14 @@ void init()
 
 	mesh_data_neutral = load_mesh(MESH_NEUTRAL);
 
+	std::cout << "Calculating deltaM vertices..." << std::endl;
+	for (std::string name : mesh_file_names) {
+		std::string filepath = "models/high-res2/" + name;
+		calcDeltaM(filepath.c_str());
 
-	getDeltaM(MESH_0);
+	}
+	std::cout << "Finished." << std::endl;
 
-	
 	std::cout << mesh_data_neutral.mVertices[1000].x << std::endl;
 
 	//std::cout << glm::to_string(deltaM[0]) << std::endl;
@@ -171,14 +203,22 @@ float rotate_speed = 10.0f;
 void keypress(unsigned char key, int x, int y) {
 	if (key == 'y') {
 
-		applyDeltaM(mesh_data_neutral, deltaM,0.2f);
-		
+		applyDeltaM(mesh_data_neutral, deltaMs[0],0.1f);
 		
 	}
 	if (key == 'u') {
 
-		applyDeltaM(mesh_data_neutral, deltaM, -0.2f);
+		applyDeltaM(mesh_data_neutral, deltaMs[0], -0.1f);
 
+	}
+	if (key == 'h') {
+
+		applyDeltaM(mesh_data_neutral, deltaMs[1], 0.1f);
+
+	}
+	if (key == 'j') {
+
+		applyDeltaM(mesh_data_neutral, deltaMs[1], -0.1f);
 
 	}
 }
