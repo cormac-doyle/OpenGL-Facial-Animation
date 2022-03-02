@@ -156,22 +156,34 @@ void init()
 	
 }
 
+void applyDeltaM(ModelData& mesh_data_neutral, std::vector<glm::vec3> deltaM, float weight)
+{
+	for (unsigned int i = 0; i < mesh_data_neutral.mPointCount; i++) {
+		mesh_data_neutral.mVertices[i].x -= deltaM[i].x * weight;
+		mesh_data_neutral.mVertices[i].y -= deltaM[i].y * weight;
+		mesh_data_neutral.mVertices[i].z -= deltaM[i].z * weight;
+	}
 
+}
 
 // Placeholder code for the keypress
 float rotate_speed = 10.0f;
 void keypress(unsigned char key, int x, int y) {
 	if (key == 'y') {
 
-		for (unsigned int i = 0; i < mesh_data_neutral.mPointCount; i++) {
-			mesh_data_neutral.mVertices[i].x -= deltaM[i].x;
-			mesh_data_neutral.mVertices[i].y -= deltaM[i].y;
-			mesh_data_neutral.mVertices[i].z -= deltaM[i].z;
-		}
+		applyDeltaM(mesh_data_neutral, deltaM,0.2f);
 		
 		
 	}
+	if (key == 'u') {
+
+		applyDeltaM(mesh_data_neutral, deltaM, -0.2f);
+
+
+	}
 }
+
+
 
 int main(int argc, char** argv) {
 
