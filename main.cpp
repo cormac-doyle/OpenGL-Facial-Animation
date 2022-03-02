@@ -21,11 +21,13 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/euler_angles.hpp>
+#include "glm/gtx/string_cast.hpp"
 
 
 #include "utils/mesh.h"
 #include "utils/shaders.h"
 #include "utils/vbo.h"
+#include "MAIN.H"
 
 
 
@@ -51,27 +53,20 @@ int width = 800;
 int height = 600;
 
 
-ModelData mesh_data;
-ModelData mesh_data2;
+ModelData mesh_data_neutral;
+std::vector<glm::vec3> deltaM;
+ModelData mesh_data_jaw_open;
 
 
 bool activate = false;
 void loadNeutral(glm::mat4& modelNeutral, int matrix_location)
 {
-	mesh_data = generateObjectBufferMesh(MESH_NEUTRAL, shaderProgramID);
-
-	if (activate) {
-		mesh_data2 = generateObjectBufferMesh(MESH_0, shaderProgramID);
-
-		mesh_data
-	}
-	
 
 	modelNeutral = glm::mat4(1.0f);
-	//modelNeutral = glm::yawPitchRoll(glm::radians(plane_rotate_x), glm::radians(plane_rotate_y), glm::radians(plane_rotate_z));
+	generateObjectBufferMesh(mesh_data_neutral, shaderProgramID);
 
 	glUniformMatrix4fv(matrix_location, 1, GL_FALSE, glm::value_ptr(modelNeutral));
-	glDrawArrays(GL_TRIANGLES, 0, mesh_data.mPointCount);
+	glDrawArrays(GL_TRIANGLES, 0, mesh_data_neutral.mPointCount);
 }
 
 void display() {
@@ -120,24 +115,61 @@ void updateScene() {
 	float delta = (curr_time - last_time) * 0.001f;
 	last_time = curr_time;
 
+	
 
 	// Draw the next frame
 	glutPostRedisplay();
 }
 
+void getDeltaM(const char* MESH)
+{
+	mesh_data_jaw_open = load_mesh(MESH);
+	
+
+	for (unsigned int i = 0; i < mesh_data_neutral.mPointCount; i++) {
+		glm::vec3 vertice;
+		vertice.x = mesh_data_neutral.mVertices[i].x - mesh_data_jaw_open.mVertices[i].x;
+		vertice.y = mesh_data_neutral.mVertices[i].y - mesh_data_jaw_open.mVertices[i].y;
+		vertice.z = mesh_data_neutral.mVertices[i].z - mesh_data_jaw_open.mVertices[i].z;
+		std::cout << "deltaM  " << i << " " << glm::to_string(vertice) << std::endl;
+
+		deltaM.push_back(vertice);
+	}
+}
 
 void init()
 {
 	// Set up the shaders
 	shaderProgramID = CompileShaders();
+
+	mesh_data_neutral = load_mesh(MESH_NEUTRAL);
+
+
+	getDeltaM(MESH_0);
+
+	
+	std::cout << mesh_data_neutral.mVertices[1000].x << std::endl;
+
+	//std::cout << glm::to_string(deltaM[0]) << std::endl;
+	//mesh_data.mVertices = deltaM;
+	
 	
 }
+
+
 
 // Placeholder code for the keypress
 float rotate_speed = 10.0f;
 void keypress(unsigned char key, int x, int y) {
 	if (key == 'y') {
-		activate = true;
+
+		for (unsigned int i = 0; i < mesh_data_neutral.mPointCount; i++) {
+			mesh_data_neutral.mVertices[i].x -= deltaM[i].x;
+			mesh_data_neutral.mVertices[i].y -= deltaM[i].y;
+			mesh_data_neutral.mVertices[i].z -= deltaM[i].z;
+		}
+		
+		
 	}
 }
 
