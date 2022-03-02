@@ -29,9 +29,9 @@ ModelData load_mesh(const char* file_name) {
 		return modelData;
 	}
 
-	printf("  %i materials\n", scene->mNumMaterials);
-	printf("  %i meshes\n", scene->mNumMeshes);
-	printf("  %i textures\n", scene->mNumTextures);
+	//printf("  %i materials\n", scene->mNumMaterials);
+	//printf("  %i meshes\n", scene->mNumMeshes);
+	//printf("  %i textures\n", scene->mNumTextures);
 
 	for (unsigned int m_i = 0; m_i < scene->mNumMeshes; m_i++) {
 		const aiMesh* mesh = scene->mMeshes[m_i];

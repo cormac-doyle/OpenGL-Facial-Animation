@@ -19,6 +19,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="libraries\imgui\imgui.cpp" />
+    <ClCompile Include="libraries\imgui\imgui_demo.cpp" />
+    <ClCompile Include="libraries\imgui\imgui_draw.cpp" />
+    <ClCompile Include="libraries\imgui\imgui_impl_glut.cpp" />
+    <ClCompile Include="libraries\imgui\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="libraries\imgui\imgui_tables.cpp" />
+    <ClCompile Include="libraries\imgui\imgui_widgets.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -67,6 +74,15 @@
     <ClInclude Include="assimp\include\assimp\vector2.h" />
     <ClInclude Include="assimp\include\assimp\vector3.h" />
     <ClInclude Include="assimp\include\assimp\version.h" />
+    <ClInclude Include="libraries\imgui\imconfig.h" />
+    <ClInclude Include="libraries\imgui\imgui.h" />
+    <ClInclude Include="libraries\imgui\imgui_impl_glut.h" />
+    <ClInclude Include="libraries\imgui\imgui_impl_opengl3.h" />
+    <ClInclude Include="libraries\imgui\imgui_impl_opengl3_loader.h" />
+    <ClInclude Include="libraries\imgui\imgui_internal.h" />
+    <ClInclude Include="libraries\imgui\imstb_rectpack.h" />
+    <ClInclude Include="libraries\imgui\imstb_textedit.h" />
+    <ClInclude Include="libraries\imgui\imstb_truetype.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="utils\vbo.h" />
     <ClInclude Include="utils\shaders.h" />
