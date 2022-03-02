@@ -27,7 +27,7 @@
 
 #include <imgui.h>
 #include <imgui_impl_glut.h>
-#include <imgui_impl_opengl2.h>
+#include <imgui_impl_opengl3.h>
 
 
 #include "utils/mesh.h"
@@ -104,7 +104,7 @@ void loadNeutral(glm::mat4& modelNeutral, int matrix_location)
 }
 
 void display() {
-	ImGui_ImplOpenGL2_NewFrame();
+	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGLUT_NewFrame();
 	
 	ImGui::Begin("Window");
@@ -123,7 +123,7 @@ void display() {
 	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 
 	glUseProgram(shaderProgramID);
@@ -206,9 +206,6 @@ void init()
 	std::cout << "Finished loading deltaM vertices." << std::endl;
 
 	
-
-	
-	
 }
 
 void applyDeltaM(ModelData& mesh_data_neutral, std::vector<glm::vec3> deltaM, float weight)
@@ -263,9 +260,9 @@ int main(int argc, char** argv) {
 
 	// Set up the window
 	glutInit(&argc, argv);
-#ifdef __FREEGLUT_EXT_H__
+
 	glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
-#endif
+
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_MULTISAMPLE);
 	glutInitWindowSize(width, height);
 	glutCreateWindow("Hello Triangle");
@@ -274,7 +271,7 @@ int main(int argc, char** argv) {
 	glutDisplayFunc(display);
 	glutIdleFunc(updateScene);
 	glutKeyboardFunc(keypress);
-	glutReshapeFunc(reshape);
+	//glutReshapeFunc(reshape);
 	//glutSetOption();
 
 	// A call to glewInit() must be done after glut is initialized!
@@ -288,14 +285,14 @@ int main(int argc, char** argv) {
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	//ImGuiIO& io = ImGui::GetIO(); (void)io;
 	// Setup Dear ImGui style
 	ImGui::StyleColorsClassic();
 
 	// Setup Platform/Renderer bindings
 	ImGui_ImplGLUT_Init();
 	ImGui_ImplGLUT_InstallFuncs(); // use the imgui glut funcs
-	ImGui_ImplOpenGL2_Init();
+	ImGui_ImplOpenGL3_Init();
 
 	// Set up your objects and shaders
 	init();
@@ -303,7 +300,7 @@ int main(int argc, char** argv) {
 	glutMainLoop();
 
 	// imgui cleanup
-	ImGui_ImplOpenGL2_Shutdown();
+	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGLUT_Shutdown();
 	ImGui::DestroyContext();
 	return 0;
