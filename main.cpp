@@ -10,6 +10,8 @@
 // OpenGL includes
 #include <GL/glew.h>
 #include <GL/freeglut.h>
+#include <GL/glut.h>
+
 
 // Assimp includes
 #include <assimp/cimport.h> // scene importer
@@ -83,7 +85,7 @@ GLuint shaderProgramID;
 unsigned int mesh_vao = 0;
 int width = 800;
 int height = 600;
-
+static float aspect = width/ (float) height;
 
 ModelData mesh_data_neutral;
 std::vector < std::vector<glm::vec3> > deltaMs;
@@ -104,17 +106,26 @@ void loadNeutral(glm::mat4& modelNeutral, int matrix_location)
 void display() {
 	ImGui_ImplOpenGL2_NewFrame();
 	ImGui_ImplGLUT_NewFrame();
-	ImGui::NewFrame();
+	
 	ImGui::Begin("Window");
+
+	ImGui::Text("A Sample Window");
 
 	ImGui::End();
 
+	ImGui::Render();
+	ImGuiIO& io = ImGui::GetIO();
+	glViewport(0, 0, (GLsizei)io.DisplaySize.x, (GLsizei)io.DisplaySize.y);
 
 	// tell GL to only draw onto a pixel if the shape is closer to the viewer
 	glEnable(GL_DEPTH_TEST); // enable depth-testing
 	glDepthFunc(GL_LESS); // depth-testing interprets a smaller value as "closer"
 	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
+
+
 	glUseProgram(shaderProgramID);
 
 	// load mesh into a vertex buffer array
@@ -139,8 +150,11 @@ void display() {
 	glm::mat4 modelPlane;
 	loadNeutral(modelPlane, matrix_location);
 
-	ImGui::Render();
+
+	
+
 	glutSwapBuffers();
+	
 }
 
 
@@ -154,7 +168,7 @@ void updateScene() {
 	float delta = (curr_time - last_time) * 0.001f;
 	last_time = curr_time;
 
-	ImGui::NewFrame();
+	
 
 	// Draw the next frame
 	glutPostRedisplay();
@@ -210,9 +224,12 @@ void applyDeltaM(ModelData& mesh_data_neutral, std::vector<glm::vec3> deltaM, fl
 // Placeholder code for the keypress
 float rotate_speed = 10.0f;
 void keypress(unsigned char key, int x, int y) {
-	if (key == 'y') {
 
-		applyDeltaM(mesh_data_neutral, deltaMs[0],0.1f);
+	ImGui_ImplGLUT_KeyboardFunc(key, x, y);
+
+	if (key == 'y') {
+		
+		applyDeltaM(mesh_data_neutral, deltaMs[0], 0.1f);
 		
 	}
 	if (key == 'u') {
@@ -230,15 +247,26 @@ void keypress(unsigned char key, int x, int y) {
 		applyDeltaM(mesh_data_neutral, deltaMs[1], -0.1f);
 
 	}
+	glutPostRedisplay();
 }
 
+void reshape(GLint w, GLint h) {
+	// imgui reshape func
+	ImGui_ImplGLUT_ReshapeFunc(w, h);
+
+	glViewport(0, 0, w, h);
+	aspect = float(w / h);
+}
 
 
 int main(int argc, char** argv) {
 
 	// Set up the window
 	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
+#ifdef __FREEGLUT_EXT_H__
+	glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
+#endif
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_MULTISAMPLE);
 	glutInitWindowSize(width, height);
 	glutCreateWindow("Hello Triangle");
 
@@ -246,6 +274,8 @@ int main(int argc, char** argv) {
 	glutDisplayFunc(display);
 	glutIdleFunc(updateScene);
 	glutKeyboardFunc(keypress);
+	glutReshapeFunc(reshape);
+	//glutSetOption();
 
 	// A call to glewInit() must be done after glut is initialized!
 	GLenum res = glewInit();
@@ -258,7 +288,7 @@ int main(int argc, char** argv) {
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
-
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	// Setup Dear ImGui style
 	ImGui::StyleColorsClassic();
 
