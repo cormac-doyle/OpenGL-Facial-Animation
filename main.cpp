@@ -34,12 +34,12 @@ MESH TO LOAD
 ----------------------------------------------------------------------------*/
 // this mesh is a dae file format but you should be able to use any other format too, obj is typically what is used
 // put the mesh in your project directory, or provide a filepath for it here
-#define MESH_PLANE "models/simplePlane.dae"
-#define MESH_PROPELLOR "models/propellor.dae"
+#define MESH_NEUTRAL "models/high-res2/neutral.obj"
+#define MESH_0 "models/high-res2/Mery_jaw_open.obj"
+
 
 /*----------------------------------------------------------------------------
 ----------------------------------------------------------------------------*/
-
 
 
 using namespace std;
@@ -50,40 +50,27 @@ unsigned int mesh_vao = 0;
 int width = 800;
 int height = 600;
 
-GLfloat rotate_propellor = 0.0f;
-float propellor_pos_x = 2.1f;
-
-GLfloat plane_rotate_x = 0.0f;
-GLfloat plane_rotate_y = 0.0f;
-GLfloat plane_rotate_z = 0.0f;
-
 
 ModelData mesh_data;
+ModelData mesh_data2;
 
-void loadPropellor(glm::mat4& modelPlane, int matrix_location, float propellor_pos)
+
+bool activate = false;
+void loadNeutral(glm::mat4& modelNeutral, int matrix_location)
 {
-	mesh_data = generateObjectBufferMesh(MESH_PROPELLOR, shaderProgramID);
-	// Set up the child matrix
-	glm::mat4 modelPropellor = glm::mat4(1.0f);
-	modelPropellor = glm::translate(modelPropellor, glm::vec3(propellor_pos, -0.4f, 2.2f));
-	modelPropellor = glm::rotate(modelPropellor, glm::radians(rotate_propellor), glm::vec3(0, 0, 1));
+	mesh_data = generateObjectBufferMesh(MESH_NEUTRAL, shaderProgramID);
 
-	// Apply the root matrix to the child matrix
-	modelPropellor = modelPlane * modelPropellor;
+	if (activate) {
+		mesh_data2 = generateObjectBufferMesh(MESH_0, shaderProgramID);
 
-	// Update the appropriate uniform and draw the mesh again
-	glUniformMatrix4fv(matrix_location, 1, GL_FALSE, glm::value_ptr(modelPropellor));
-	glDrawArrays(GL_TRIANGLES, 0, mesh_data.mPointCount);
-}
+		mesh_data
+	}
+	
 
-void loadPlane(glm::mat4& modelPlane, int matrix_location)
-{
-	mesh_data = generateObjectBufferMesh(MESH_PLANE, shaderProgramID);
+	modelNeutral = glm::mat4(1.0f);
+	//modelNeutral = glm::yawPitchRoll(glm::radians(plane_rotate_x), glm::radians(plane_rotate_y), glm::radians(plane_rotate_z));
 
-	modelPlane = glm::mat4(1.0f);
-	modelPlane = glm::yawPitchRoll(glm::radians(plane_rotate_x), glm::radians(plane_rotate_y), glm::radians(plane_rotate_z));
-
-	glUniformMatrix4fv(matrix_location, 1, GL_FALSE, glm::value_ptr(modelPlane));
+	glUniformMatrix4fv(matrix_location, 1, GL_FALSE, glm::value_ptr(modelNeutral));
 	glDrawArrays(GL_TRIANGLES, 0, mesh_data.mPointCount);
 }
 
@@ -108,7 +95,7 @@ void display() {
 	glm::mat4 view = glm::mat4(1.0f);
 	glm::mat4 persp_proj = glm::perspective(45.0f, (float)width / (float)height, 0.1f, 1000.0f);
 	
-	view = glm::translate(view, glm::vec3(0.0, 0.0, -10.0f));
+	view = glm::translate(view, glm::vec3(0.0, -20.0f, -50.0f));
 
 	// update uniforms & draw
 	glUniformMatrix4fv(proj_mat_location, 1, GL_FALSE, glm::value_ptr(persp_proj));
@@ -116,10 +103,7 @@ void display() {
 
 
 	glm::mat4 modelPlane;
-	loadPlane(modelPlane, matrix_location);
-
-	loadPropellor(modelPlane, matrix_location, propellor_pos_x);
-	loadPropellor(modelPlane, matrix_location, propellor_pos_x*-1);
+	loadNeutral(modelPlane, matrix_location);
 
 
 	glutSwapBuffers();
@@ -136,9 +120,6 @@ void updateScene() {
 	float delta = (curr_time - last_time) * 0.001f;
 	last_time = curr_time;
 
-	// Rotate the model slowly around the y axis at 20 degrees per second
-	rotate_propellor += 200.0f * delta;
-	rotate_propellor = fmodf(rotate_propellor, 360.0f);
 
 	// Draw the next frame
 	glutPostRedisplay();
@@ -156,22 +137,7 @@ void init()
 float rotate_speed = 10.0f;
 void keypress(unsigned char key, int x, int y) {
 	if (key == 'y') {
-		plane_rotate_x += rotate_speed;
-	}
-	if (key == '6') {
-		plane_rotate_x -= rotate_speed;
-	}
-	if (key == 'p') {
-		plane_rotate_y += rotate_speed;
-	}
-	if (key == '0') {
-		plane_rotate_y -= rotate_speed;
-	}
-	if (key == 'r') {
-		plane_rotate_z += rotate_speed;
-	}
-	if (key == '4') {
-		plane_rotate_z -= rotate_speed;
+		activate = true;
 	}
 }
 
