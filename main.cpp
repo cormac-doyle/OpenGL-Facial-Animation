@@ -23,6 +23,10 @@
 #include <glm/gtx/euler_angles.hpp>
 #include "glm/gtx/string_cast.hpp"
 
+#include <imgui.h>
+#include <imgui_impl_glut.h>
+#include <imgui_impl_opengl2.h>
+
 
 #include "utils/mesh.h"
 #include "utils/shaders.h"
@@ -98,6 +102,13 @@ void loadNeutral(glm::mat4& modelNeutral, int matrix_location)
 }
 
 void display() {
+	ImGui_ImplOpenGL2_NewFrame();
+	ImGui_ImplGLUT_NewFrame();
+	ImGui::NewFrame();
+	ImGui::Begin("Window");
+
+	ImGui::End();
+
 
 	// tell GL to only draw onto a pixel if the shape is closer to the viewer
 	glEnable(GL_DEPTH_TEST); // enable depth-testing
@@ -128,7 +139,7 @@ void display() {
 	glm::mat4 modelPlane;
 	loadNeutral(modelPlane, matrix_location);
 
-
+	ImGui::Render();
 	glutSwapBuffers();
 }
 
@@ -143,7 +154,7 @@ void updateScene() {
 	float delta = (curr_time - last_time) * 0.001f;
 	last_time = curr_time;
 
-	
+	ImGui::NewFrame();
 
 	// Draw the next frame
 	glutPostRedisplay();
@@ -178,12 +189,10 @@ void init()
 		calcDeltaM(filepath.c_str());
 
 	}
-	std::cout << "Finished." << std::endl;
+	std::cout << "Finished loading deltaM vertices." << std::endl;
 
-	std::cout << mesh_data_neutral.mVertices[1000].x << std::endl;
+	
 
-	//std::cout << glm::to_string(deltaM[0]) << std::endl;
-	//mesh_data.mVertices = deltaM;
 	
 	
 }
@@ -245,9 +254,28 @@ int main(int argc, char** argv) {
 		fprintf(stderr, "Error: '%s'\n", glewGetErrorString(res));
 		return 1;
 	}
+
+	// Setup Dear ImGui context
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+
+	// Setup Dear ImGui style
+	ImGui::StyleColorsClassic();
+
+	// Setup Platform/Renderer bindings
+	ImGui_ImplGLUT_Init();
+	ImGui_ImplGLUT_InstallFuncs(); // use the imgui glut funcs
+	ImGui_ImplOpenGL2_Init();
+
 	// Set up your objects and shaders
 	init();
 	// Begin infinite event loop
 	glutMainLoop();
+
+	// imgui cleanup
+	ImGui_ImplOpenGL2_Shutdown();
+	ImGui_ImplGLUT_Shutdown();
+	ImGui::DestroyContext();
 	return 0;
 }
+ 
