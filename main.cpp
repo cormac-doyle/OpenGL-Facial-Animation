@@ -91,7 +91,7 @@ static float aspect = width/ (float) height;
 ModelData mesh_data_neutral_original;
 ModelData mesh_data_neutral;
 
-std::vector < std::vector<Eigen::Vector3d> > deltaMs;
+std::vector < std::vector<glm::vec3> > deltaMs;
 std::vector<float> mWeights;
 ModelData mesh_data_jaw_open;
 
@@ -123,13 +123,13 @@ void loadNeutral(glm::mat4& modelNeutral, int matrix_location)
 	glDrawArrays(GL_TRIANGLES, 0, mesh_data_neutral.mPointCount);
 }
 
-void applyDeltaM(ModelData& mesh_data_neutral, std::vector<Eigen::Vector3d> deltaM, float weight)
+void applyDeltaM(ModelData& mesh_data_neutral, std::vector<glm::vec3> deltaM, float weight)
 {
 	
 	for (unsigned int i = 0; i < mesh_data_neutral.mPointCount; i++) {
-		mesh_data_neutral.mVertices[i].x -= deltaM[i].x() * weight;
-		mesh_data_neutral.mVertices[i].y -= deltaM[i].y() * weight;
-		mesh_data_neutral.mVertices[i].z -= deltaM[i].z() * weight;
+		mesh_data_neutral.mVertices[i].x -= deltaM[i].x * weight;
+		mesh_data_neutral.mVertices[i].y -= deltaM[i].y * weight;
+		mesh_data_neutral.mVertices[i].z -= deltaM[i].z * weight;
 	}
 
 }
@@ -234,12 +234,12 @@ void calcDeltaM(const char* MESH)
 {
 	mesh_data_jaw_open = load_mesh(MESH);
 	
-	std::vector<Eigen::Vector3d> deltaM;
+	std::vector<glm::vec3> deltaM;
 	for (unsigned int i = 0; i < mesh_data_neutral.mPointCount; i++) {
-		Eigen::Vector3d vertice;
-		vertice.x() = mesh_data_neutral.mVertices[i].x - mesh_data_jaw_open.mVertices[i].x;
-		vertice.y() = mesh_data_neutral.mVertices[i].y - mesh_data_jaw_open.mVertices[i].y;
-		vertice.z() = mesh_data_neutral.mVertices[i].z - mesh_data_jaw_open.mVertices[i].z;
+		glm::vec3 vertice;
+		vertice.x = mesh_data_neutral.mVertices[i].x - mesh_data_jaw_open.mVertices[i].x;
+		vertice.y = mesh_data_neutral.mVertices[i].y - mesh_data_jaw_open.mVertices[i].y;
+		vertice.z = mesh_data_neutral.mVertices[i].z - mesh_data_jaw_open.mVertices[i].z;
 
 		deltaM.push_back(vertice);
 	}
