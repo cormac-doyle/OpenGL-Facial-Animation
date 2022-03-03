@@ -3,6 +3,7 @@
 #include <mmsystem.h>
 #include <iostream>
 #include <string>
+#include <fstream>
 #include <stdio.h>
 #include <math.h>
 #include <vector> // STL dynamic memory.
@@ -94,6 +95,10 @@ std::vector < std::vector<glm::vec3> > deltaMs;
 std::vector<float> mWeights;
 ModelData mesh_data_jaw_open;
 
+bool playAnim = false;
+vector<vector<float>> animationWeights;
+
+
 void removeWordFromLine(std::string& line, const std::string& word)
 {
 	auto n = line.find(word);
@@ -140,6 +145,9 @@ void display() {
 	}
 	ImGui::Text("Rotate Face:");
 	ImGui::SliderFloat(" ", &rotate_face.y, -180.0f, 180.0f);
+	if (ImGui::Button("Play Animation")) {
+		playAnim = true;
+	}
 	ImGui::End();
 
 	ImGui::Render();
@@ -190,8 +198,7 @@ void display() {
 }
 
 
-
-
+int frame_num = 0;
 
 void updateScene() {
 
@@ -203,11 +210,29 @@ void updateScene() {
 	last_time = curr_time;
 
 	mesh_data_neutral = mesh_data_neutral_original;
-	for (int i = 0; i < mesh_file_names.size(); i++) {
-		applyDeltaM(mesh_data_neutral, deltaMs[i], mWeights[i]);
+	
+
+
+	if (playAnim) {
+		
+
+		for (int i = 0; i < mesh_file_names.size(); i++) {
+			applyDeltaM(mesh_data_neutral, deltaMs[i], animationWeights[frame_num][i]);
+		}
+		frame_num++;
+		if (frame_num == animationWeights.size()) {
+			playAnim = false;
+		}
+	}
+	else {
+		for (int i = 0; i < mesh_file_names.size(); i++) {
+			applyDeltaM(mesh_data_neutral, deltaMs[i], mWeights[i]);
+			frame_num = 0;
+		}
 	}
 
 
+	
 	// Draw the next frame
 	glutPostRedisplay();
 }
@@ -230,8 +255,41 @@ void calcDeltaM(const char* MESH)
 	mWeights.push_back(weight);
 }
 
+
+//read file code found here
+//https://www.tutorialspoint.com/how-to-read-a-text-file-with-cplusplus#:~:text=close()%20method.-,Call%20open()%20method%20to%20open%20a%20file%20%E2%80%9Ctpoint.,it%20into%20the%20string%20tp.
+void read_anim_text_file() {
+	fstream newfile;
+	std::string delimiter = " ";
+	std::string weight;
+	newfile.open("blendshape_animation.txt", ios::in); //open a file to perform read operation using file object
+	if (newfile.is_open()) { //checking whether the file is open
+		string line;
+	while (getline(newfile, line)) { //read data from file object and put it into string.
+		//cout << line << "\n"; //print the data of the string
+		
+		size_t pos = 0;
+		vector<float> lineWeights;
+		
+		//split line by a delimiter found here: https://stackoverflow.com/questions/14265581/parse-split-a-string-in-c-using-string-delimiter-standard-c
+		while ((pos = line.find(delimiter)) != std::string::npos) {
+			std::string weight = line.substr(0, pos);
+			//std::cout << weight << std::endl;
+			lineWeights.push_back(std::stof(weight));
+
+			line.erase(0, pos + delimiter.length());
+		}
+		animationWeights.push_back(lineWeights);
+
+	}
+	newfile.close(); //close the file object.
+}
+}
+
 void init()
 {
+	read_anim_text_file();
+
 	for (std::string name: mesh_file_names) {
 		std::string label = name;
 		removeWordFromLine(label,".obj");
