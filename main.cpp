@@ -13,7 +13,6 @@
 #include <GL/freeglut.h>
 #include <GL/glut.h>
 
-
 // Assimp includes
 #include <assimp/cimport.h> // scene importer
 #include <assimp/scene.h> // collects data
@@ -26,10 +25,11 @@
 #include <glm/gtx/euler_angles.hpp>
 #include "glm/gtx/string_cast.hpp"
 
+#include<Eigen/Dense>
+
 #include <imgui.h>
 #include <imgui_impl_glut.h>
 #include <imgui_impl_opengl3.h>
-
 
 #include "utils/mesh.h"
 #include "utils/shaders.h"
@@ -84,19 +84,20 @@ using namespace std;
 GLuint shaderProgramID;
 
 unsigned int mesh_vao = 0;
-int width = 1200;
-int height = 900;
+int width = 1400;
+int height = 1050;
 static float aspect = width/ (float) height;
 
 ModelData mesh_data_neutral_original;
 ModelData mesh_data_neutral;
 
-std::vector < std::vector<glm::vec3> > deltaMs;
+std::vector < std::vector<Eigen::Vector3d> > deltaMs;
 std::vector<float> mWeights;
 ModelData mesh_data_jaw_open;
 
 bool playAnim = false;
 vector<vector<float>> animationWeights;
+
 
 
 void removeWordFromLine(std::string& line, const std::string& word)
@@ -122,13 +123,13 @@ void loadNeutral(glm::mat4& modelNeutral, int matrix_location)
 	glDrawArrays(GL_TRIANGLES, 0, mesh_data_neutral.mPointCount);
 }
 
-void applyDeltaM(ModelData& mesh_data_neutral, std::vector<glm::vec3> deltaM, float weight)
+void applyDeltaM(ModelData& mesh_data_neutral, std::vector<Eigen::Vector3d> deltaM, float weight)
 {
 	
 	for (unsigned int i = 0; i < mesh_data_neutral.mPointCount; i++) {
-		mesh_data_neutral.mVertices[i].x -= deltaM[i].x * weight;
-		mesh_data_neutral.mVertices[i].y -= deltaM[i].y * weight;
-		mesh_data_neutral.mVertices[i].z -= deltaM[i].z * weight;
+		mesh_data_neutral.mVertices[i].x -= deltaM[i].x() * weight;
+		mesh_data_neutral.mVertices[i].y -= deltaM[i].y() * weight;
+		mesh_data_neutral.mVertices[i].z -= deltaM[i].z() * weight;
 	}
 
 }
@@ -177,21 +178,14 @@ void display() {
 	glm::mat4 view = glm::mat4(1.0f);
 	glm::mat4 persp_proj = glm::perspective(45.0f, (float)width / (float)height, 0.1f, 1000.0f);
 	
-	view = glm::translate(view, glm::vec3(10.0, -20.0f, -50.0f));
+	view = glm::translate(view, glm::vec3(10.0, -15.0f, -50.0f));
 
 	// update uniforms & draw
 	glUniformMatrix4fv(proj_mat_location, 1, GL_FALSE, glm::value_ptr(persp_proj));
 	glUniformMatrix4fv(view_mat_location, 1, GL_FALSE, glm::value_ptr(view));
 
-
-
-	
-
 	glm::mat4 modelNeutralFace;
 	loadNeutral(modelNeutralFace, matrix_location);
-
-
-	
 
 	glutSwapBuffers();
 	
@@ -214,7 +208,6 @@ void updateScene() {
 
 
 	if (playAnim) {
-		
 
 		for (int i = 0; i < mesh_file_names.size(); i++) {
 			applyDeltaM(mesh_data_neutral, deltaMs[i], animationWeights[frame_num][i]);
@@ -241,12 +234,12 @@ void calcDeltaM(const char* MESH)
 {
 	mesh_data_jaw_open = load_mesh(MESH);
 	
-	std::vector<glm::vec3> deltaM;
+	std::vector<Eigen::Vector3d> deltaM;
 	for (unsigned int i = 0; i < mesh_data_neutral.mPointCount; i++) {
-		glm::vec3 vertice;
-		vertice.x = mesh_data_neutral.mVertices[i].x - mesh_data_jaw_open.mVertices[i].x;
-		vertice.y = mesh_data_neutral.mVertices[i].y - mesh_data_jaw_open.mVertices[i].y;
-		vertice.z = mesh_data_neutral.mVertices[i].z - mesh_data_jaw_open.mVertices[i].z;
+		Eigen::Vector3d vertice;
+		vertice.x() = mesh_data_neutral.mVertices[i].x - mesh_data_jaw_open.mVertices[i].x;
+		vertice.y() = mesh_data_neutral.mVertices[i].y - mesh_data_jaw_open.mVertices[i].y;
+		vertice.z() = mesh_data_neutral.mVertices[i].z - mesh_data_jaw_open.mVertices[i].z;
 
 		deltaM.push_back(vertice);
 	}
