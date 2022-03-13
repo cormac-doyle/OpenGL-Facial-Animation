@@ -5,5 +5,4 @@
 
 
 ## Using Sliders To Alter Blendshape Weights 
-![ezgif com-gif-maker (1)](https://user-images.githubusercontent.com/57908067/156467780-a5907685-79b3-4a86-809b-007db5521dff.gif)
-
+![ezgif com-gif-maker (6)](https://user-images.githubusercontent.com/57908067/158067289-44d79a53-9770-42c7-9e92-a73666e7db10.gif)
