@@ -100,6 +100,13 @@ ModelData mesh_data;
 bool playAnim = false;
 vector<vector<float>> animationWeights;
 
+std::vector<int> constraints_index;
+
+Eigen::VectorXf m0;
+Eigen::VectorXf m;
+
+Eigen::MatrixXf B;
+
 
 
 void removeWordFromLine(std::string& line, const std::string& word)
@@ -117,7 +124,7 @@ void loadNeutral(glm::mat4& modelNeutral, int matrix_location)
 {
 
 	modelNeutral = glm::mat4(1.0f);
-	modelNeutral = glm::rotate(modelNeutral, glm::radians(rotate_face.y), glm::vec3(0, 1, 0));
+	//modelNeutral = glm::rotate(modelNeutral, glm::radians(rotate_face.y), glm::vec3(0, 1, 0));
 
 	generateObjectBufferMesh(mesh_data_neutral, shaderProgramID);
 
@@ -169,46 +176,83 @@ glm::vec3 vertexPicker(int x, int y, glm::mat4 VM, glm::mat4 P, std::vector<Mode
 	mesh_index = m_index;
 	vertex_index = v_index;
 	glm::vec3 vertex = meshes[m_index].mVertices[v_index];
-	//constraints.push_back(v_index); //add index of constrained vertex to list of constraints
-	//mo.conservativeResize(constraints.size() * 3);
-	//mo(3 * constraints.size() - 3) = vertex.x;
-	//mo(3 * constraints.size() - 2) vertex.y;
-	//mo(3 * constraints.size() - 1) vertex.z;
+	constraints_index.push_back(v_index); //add index of constrained vertex to list of constraints
+	m0.conservativeResize(constraints_index.size() * 3);
+	m0(3 * constraints_index.size() - 3) = vertex.x;
+	m0(3 * constraints_index.size() - 2) = vertex.y;
+	m0(3 * constraints_index.size() - 1) = vertex.z;
 	std::cout << "vertex position: " << glm::to_string(vertex) << std::endl;
 	return vertex;
-
 }
 
-int findClosestExpression(int x, int y, glm::mat4 VM, glm::mat4 P, int chosenVertexIndex, std::vector<ModelData> expressionMeshes) {
+void getMouseLocation(int x, int y, glm::mat4 VM, glm::mat4 P, int chosenVertexIndex) {
 	glm::vec3 window;
 	window.x = x;
 	window.y = height - y - 1;
 	glReadPixels(x, height - y - 1, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &window.z);
 
 	glm::vec3 object = glm::unProject(window, VM, P, glm::vec4(0.0f, 0.0f, width, height));
-	std::cout << "object coords are " << glm::to_string(object) << endl;
-	GLfloat dist = 100000000;
-	GLfloat temp = 0.0f;
-	GLuint m_index = 0; // index of mesh with closest vertex
-	GLuint v_index = 0; // index of closest vertex
 
-	std::cout << "findClosestExpression Debugging "<< std::endl;
-	std::cout << "chosenVertexIndex: " << chosenVertexIndex<<std::endl;
+	if (object.z < -500.0f) {
+		object.z = mesh_data_neutral.mVertices[chosenVertexIndex].z;
+	}
+
+	std::cout << "object coords are " << glm::to_string(object) << endl;
+
 
 	
-	for (int i = 0; i < expressionMeshes.size(); i++) {
-		
-			object.z = expressionMeshes[i].mVertices[chosenVertexIndex].z;
+	//constraints.push_back(v_index); //add index of constrained vertex to list of constraints
+	m.conservativeResize(constraints_index.size() * 3);
+	m(3 * constraints_index.size() - 3) = object.x;
+	m(3 * constraints_index.size() - 2) = object.y;
+	m(3 * constraints_index.size() - 1) = object.z;
+	
+	cout << "m0" << m0 << endl;
+	cout << "m" << m << endl;
+	
+}
+float alpha = 2;
+float mu = 0.001;
+Eigen::VectorXf blendshapeSolver(std::vector<ModelData> expressionMeshes) {
+	Eigen::MatrixXf Bbar(constraints_index.size() * 3, mesh_file_names.size());
 
-			temp = glm::distance(object, expressionMeshes[i].mVertices[chosenVertexIndex]);
-			std::cout << mesh_file_names[i] <<" distance " << temp << std::endl;
-			if (temp <= dist) {
-				dist = temp;
-				m_index = i;
-				
-			}
+	for (int i = 0; i < constraints_index.size();i++) {
+		for (int j = 0; j < mesh_file_names.size(); j++) {
+			Bbar(3 *i, j) = expressionMeshes[j].mVertices[constraints_index[i]].x;
+			Bbar(3 * i +1, j) = expressionMeshes[j].mVertices[constraints_index[i]].y;
+			Bbar(3 * i+ 2, j) = expressionMeshes[j].mVertices[constraints_index[i]].z;
+		}
 	}
-	return m_index;
+
+	//Left side of Equation
+	Eigen::MatrixXf LHS = Bbar.transpose() * Bbar + (alpha + mu) * Eigen::MatrixXf::Identity(mesh_file_names.size(), mesh_file_names.size());
+	
+	//Right Side Of Equation
+	Eigen::VectorXf RHS(mesh_file_names.size());
+
+	//put mWeights into Eigen
+	Eigen::VectorXf mWeightsCurrent(mesh_file_names.size());
+	for (int i = 0; i < mWeights.size();i++) {
+		cout << "glm mWeights: " << mWeights[i];
+		mWeightsCurrent(i) = mWeights[i];
+	}
+	cout << endl;
+
+	cout << "eigen mWeightsCurrent: " << mWeightsCurrent << endl;
+
+	
+
+	RHS = Bbar.transpose() * (m - m0) + 0.1 * mWeightsCurrent;
+	
+	//solve Equation
+	Eigen::LDLT<Eigen::MatrixXf> solver(LHS);
+	Eigen::VectorXf mWeightsNew = solver.solve(RHS);
+
+	cout << "eigen mWeightsNEW: " << mWeightsNew << endl;
+	
+
+	return mWeightsNew;
+	
 }
 
 
@@ -229,6 +273,9 @@ void display() {
 	if (ImGui::Button("Play Animation")) {
 		playAnim = true;
 	}
+
+	
+
 	ImGui::End();
 
 	ImGui::Render();
@@ -259,7 +306,7 @@ void display() {
 	persp_proj = glm::perspective(45.0f, (float)width / (float)height, 0.1f, 1000.0f);
 	
 	//view = glm::translate(view, glm::vec3(10.0, -15.0f, -50.0f));
-	view = glm::translate(view, glm::vec3(10.0, -15.0f, -50.0f));
+	view = glm::translate(view, glm::vec3(0.0f, -15.0f, -50.0f));
 
 
 	// update uniforms & draw
@@ -311,17 +358,17 @@ void updateScene() {
 	}
 	
 	if (mouseClickedDown) {
-		std::cout << "MOUSE DOWN X: " << mousePosDown.x << std::endl;
-		std::cout << "MOUSE DOWN Y: " << mousePosDown.y << std::endl;
+		//std::cout << "MOUSE DOWN X: " << mousePosDown.x << std::endl;
+		//std::cout << "MOUSE DOWN Y: " << mousePosDown.y << std::endl;
 		std::vector<ModelData> current_expression;
 		current_expression.push_back(mesh_data_neutral);
 		int mesh_index = -1;
 		
-		std::cout << "View Martrix " << glm::to_string(view) << std::endl;
+		//std::cout << "View Martrix " << glm::to_string(view) << std::endl;
 
 		glm::vec3 mouseVertex = vertexPicker((int) mousePosDown.x, (int) mousePosDown.y, view, persp_proj, current_expression, mesh_index, chosen_vertex_index);
-		std::cout << "mesh index " << mesh_index << std::endl;
-		std::cout << "chosen vertix is: " << glm::to_string(mouseVertex) << std::endl;
+		//std::cout << "mesh index " << mesh_index << std::endl;
+		//std::cout << "chosen vertix is: " << glm::to_string(mouseVertex) << std::endl;
 
 		mouseClickedDown = false;
 	}
@@ -332,9 +379,19 @@ void updateScene() {
 		//neutral.push_back(mesh_data_neutral);
 		
 
-		int mesh_index =findClosestExpression( (int) mousePosUp.x, (int) mousePosUp.y, view, persp_proj, chosen_vertex_index, facialExpressions);
-		mWeights[mesh_index]=1.0f;
-		std::cout << "mesh index " << mesh_index << std::endl;
+		getMouseLocation( (int) mousePosUp.x, (int) mousePosUp.y, view, persp_proj, chosen_vertex_index);
+		//mWeights[mesh_index]=1.0f;
+		//std::cout << "mesh index " << mesh_index << std::endl;
+
+		Eigen::VectorXf mWeightsNew= blendshapeSolver(facialExpressions);
+
+		//convert from eigen back to glm
+		std::vector<float> mWeightsNewGlm;
+		for (int i = 0; i < mWeightsNew.size(); i++) {
+			mWeightsNewGlm.push_back(mWeightsNew[i]);
+		}
+
+		mWeights = mWeightsNewGlm;
 		
 		mouseClickedUp = false;
 	}
