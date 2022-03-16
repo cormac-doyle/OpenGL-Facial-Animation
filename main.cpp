@@ -144,38 +144,36 @@ void applyDeltaM(ModelData& mesh_data_neutral, std::vector<glm::vec3> deltaM, fl
 }
 
 
-glm::vec3 vertexPicker(int x, int y, glm::mat4 VM, glm::mat4 P, std::vector<ModelData> meshes, int& mesh_index, int& vertex_index)
+glm::vec3 vertexPicker(int x, int y, glm::mat4 VM, glm::mat4 P, ModelData currentFaceMesh)
 {
 	glm::vec3 window;
 	window.x = x;
 	window.y = height - y - 1;
 	glReadPixels(x, height - y - 1, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &window.z);
 
-	glm::vec3 object = glm::unProject(window, VM, P, glm::vec4(0.0f, 0.0f, width, height));
-	std::cout << "object coords are " << glm::to_string(object) << endl;
+	glm::vec3 mouseVerticePosition = glm::unProject(window, VM, P, glm::vec4(0.0f, 0.0f, width, height));
+	std::cout << "object coords are " << glm::to_string(mouseVerticePosition) << endl;
 
 	// find nearest vertex 
 	GLfloat dist = 10;
 	GLfloat temp = 0.0f;
-	GLuint m_index = 0; // index of mesh with closest vertex
 	GLuint v_index = 0; // index of closest vertex
 
 	// brute force through all vertices to find nearest one 
-	for (int i = 0; i < meshes.size(); i++) {
-		for (int j = 0; j < meshes[i].mVertices.size(); j++) {
+	
+	for (int j = 0; j < currentFaceMesh.mVertices.size(); j++) {
 
-			temp = glm::distance(object, meshes[i].mVertices[j]);
-			if (temp <= dist) {
-				dist = temp;
-				m_index = i;
-				v_index = j;
-			}
+		temp = glm::distance(mouseVerticePosition, currentFaceMesh.mVertices[j]);
+		if (temp <= dist) {
+			dist = temp;
 			
+			v_index = j;
 		}
+			
 	}
-	mesh_index = m_index;
-	vertex_index = v_index;
-	glm::vec3 vertex = meshes[m_index].mVertices[v_index];
+	
+
+	glm::vec3 vertex = currentFaceMesh.mVertices[v_index];
 	constraints_index.push_back(v_index); //add index of constrained vertex to list of constraints
 	m0.conservativeResize(constraints_index.size() * 3);
 	m0(3 * constraints_index.size() - 3) = vertex.x;
@@ -191,27 +189,28 @@ void getMouseLocation(int x, int y, glm::mat4 VM, glm::mat4 P, int chosenVertexI
 	window.y = height - y - 1;
 	glReadPixels(x, height - y - 1, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &window.z);
 
-	glm::vec3 object = glm::unProject(window, VM, P, glm::vec4(0.0f, 0.0f, width, height));
+	glm::vec3 targetVerticePos = glm::unProject(window, VM, P, glm::vec4(0.0f, 0.0f, width, height));
 
-	if (object.z < -500.0f) {
-		object.z = mesh_data_neutral.mVertices[chosenVertexIndex].z;
+	if (targetVerticePos.z < -100.0f) {
+		cout << "OUT OF BOUNDS"<<endl;
 	}
-
-	std::cout << "object coords are " << glm::to_string(object) << endl;
+	//works better if you set the target vertice z the same
+	targetVerticePos.z = mesh_data_neutral.mVertices[constraints_index.back()].z;
+	std::cout << "object coords are " << glm::to_string(targetVerticePos) << endl;
 
 
 	
 	//constraints.push_back(v_index); //add index of constrained vertex to list of constraints
 	m.conservativeResize(constraints_index.size() * 3);
-	m(3 * constraints_index.size() - 3) = object.x;
-	m(3 * constraints_index.size() - 2) = object.y;
-	m(3 * constraints_index.size() - 1) = object.z;
+	m(3 * constraints_index.size() - 3) = targetVerticePos.x;
+	m(3 * constraints_index.size() - 2) = targetVerticePos.y;
+	m(3 * constraints_index.size() - 1) = targetVerticePos.z;
 	
 	cout << "m0" << m0 << endl;
 	cout << "m" << m << endl;
 	
 }
-float alpha = 2;
+float alpha = 1;
 float mu = 0.001;
 Eigen::VectorXf blendshapeSolver(std::vector<ModelData> expressionMeshes) {
 	Eigen::MatrixXf Bbar(constraints_index.size() * 3, mesh_file_names.size());
@@ -242,7 +241,7 @@ Eigen::VectorXf blendshapeSolver(std::vector<ModelData> expressionMeshes) {
 
 	
 
-	RHS = Bbar.transpose() * (m - m0) + 0.1 * mWeightsCurrent;
+	RHS = Bbar.transpose() * (m - m0) + alpha * mWeightsCurrent;
 	
 	//solve Equation
 	Eigen::LDLT<Eigen::MatrixXf> solver(LHS);
@@ -360,13 +359,12 @@ void updateScene() {
 	if (mouseClickedDown) {
 		//std::cout << "MOUSE DOWN X: " << mousePosDown.x << std::endl;
 		//std::cout << "MOUSE DOWN Y: " << mousePosDown.y << std::endl;
-		std::vector<ModelData> current_expression;
-		current_expression.push_back(mesh_data_neutral);
+		
 		int mesh_index = -1;
 		
 		//std::cout << "View Martrix " << glm::to_string(view) << std::endl;
 
-		glm::vec3 mouseVertex = vertexPicker((int) mousePosDown.x, (int) mousePosDown.y, view, persp_proj, current_expression, mesh_index, chosen_vertex_index);
+		glm::vec3 mouseVertex = vertexPicker((int) mousePosDown.x, (int) mousePosDown.y, view, persp_proj, mesh_data_neutral);
 		//std::cout << "mesh index " << mesh_index << std::endl;
 		//std::cout << "chosen vertix is: " << glm::to_string(mouseVertex) << std::endl;
 
