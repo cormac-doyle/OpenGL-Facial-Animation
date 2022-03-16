@@ -198,6 +198,7 @@ int findClosestExpression(int x, int y, glm::mat4 VM, glm::mat4 P, int chosenVer
 	
 	for (int i = 0; i < expressionMeshes.size(); i++) {
 		
+			object.z = expressionMeshes[i].mVertices[chosenVertexIndex].z;
 
 			temp = glm::distance(object, expressionMeshes[i].mVertices[chosenVertexIndex]);
 			std::cout << mesh_file_names[i] <<" distance " << temp << std::endl;
@@ -206,8 +207,6 @@ int findClosestExpression(int x, int y, glm::mat4 VM, glm::mat4 P, int chosenVer
 				m_index = i;
 				
 			}
-
-		
 	}
 	return m_index;
 }
@@ -259,7 +258,9 @@ void display() {
 	view = glm::mat4(1.0f);
 	persp_proj = glm::perspective(45.0f, (float)width / (float)height, 0.1f, 1000.0f);
 	
+	//view = glm::translate(view, glm::vec3(10.0, -15.0f, -50.0f));
 	view = glm::translate(view, glm::vec3(10.0, -15.0f, -50.0f));
+
 
 	// update uniforms & draw
 	glUniformMatrix4fv(proj_mat_location, 1, GL_FALSE, glm::value_ptr(persp_proj));
@@ -292,16 +293,33 @@ void updateScene() {
 
 	mesh_data_neutral = mesh_data_neutral_original;
 	
+	if (playAnim) {
+
+		for (int i = 0; i < mesh_file_names.size(); i++) {
+			applyDeltaM(mesh_data_neutral, deltaMs[i], animationWeights[frame_num][i]);
+		}
+		frame_num++;
+		if (frame_num == animationWeights.size()) {
+			playAnim = false;
+		}
+	}
+	else {
+		for (int i = 0; i < mesh_file_names.size(); i++) {
+			applyDeltaM(mesh_data_neutral, deltaMs[i], mWeights[i]);
+			frame_num = 0;
+		}
+	}
 	
 	if (mouseClickedDown) {
 		std::cout << "MOUSE DOWN X: " << mousePosDown.x << std::endl;
 		std::cout << "MOUSE DOWN Y: " << mousePosDown.y << std::endl;
-		std::vector<ModelData> neutral;
-		neutral.push_back(mesh_data_neutral);
+		std::vector<ModelData> current_expression;
+		current_expression.push_back(mesh_data_neutral);
 		int mesh_index = -1;
 		
+		std::cout << "View Martrix " << glm::to_string(view) << std::endl;
 
-		glm::vec3 mouseVertex = vertexPicker((int) mousePosDown.x, (int) mousePosDown.y, view, persp_proj, neutral, mesh_index, chosen_vertex_index);
+		glm::vec3 mouseVertex = vertexPicker((int) mousePosDown.x, (int) mousePosDown.y, view, persp_proj, current_expression, mesh_index, chosen_vertex_index);
 		std::cout << "mesh index " << mesh_index << std::endl;
 		std::cout << "chosen vertix is: " << glm::to_string(mouseVertex) << std::endl;
 
@@ -321,22 +339,7 @@ void updateScene() {
 		mouseClickedUp = false;
 	}
 
-	if (playAnim) {
-
-		for (int i = 0; i < mesh_file_names.size(); i++) {
-			applyDeltaM(mesh_data_neutral, deltaMs[i], animationWeights[frame_num][i]);
-		}
-		frame_num++;
-		if (frame_num == animationWeights.size()) {
-			playAnim = false;
-		}
-	}
-	else {
-		for (int i = 0; i < mesh_file_names.size(); i++) {
-			applyDeltaM(mesh_data_neutral, deltaMs[i], mWeights[i]);
-			frame_num = 0;
-		}
-	}
+	
 
 	// Draw the next frame
 	glutPostRedisplay();
