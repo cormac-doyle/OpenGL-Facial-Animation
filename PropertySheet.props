@@ -5,7 +5,7 @@
   <PropertyGroup />
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)libraries\imgui;$(ProjectDir)libraries\glm;$(ProjectDir)libraries\assimp\include;$(ProjectDir)libraries\glew-1.10.0\include;$(ProjectDir)libraries\freeglut\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)libraries\eigen-3.4.0;$(ProjectDir)libraries\imgui;$(ProjectDir)libraries\glm;$(ProjectDir)libraries\assimp\include;$(ProjectDir)libraries\glew-1.10.0\include;$(ProjectDir)libraries\freeglut\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies>assimp.lib;freeglut.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>

@@ -10,6 +10,8 @@ typedef struct
 } ModelData;
 #pragma endregion SimpleTypes
 
+
+
 ModelData load_mesh(const char* file_name) {
 	ModelData modelData;
 	modelData.mPointCount = 0;
