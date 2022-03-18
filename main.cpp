@@ -46,6 +46,8 @@ MESH TO LOAD
 // this mesh is a dae file format but you should be able to use any other format too, obj is typically what is used
 // put the mesh in your project directory, or provide a filepath for it here
 #define MESH_NEUTRAL "models/high-res2/neutral.obj"
+#define MESH_VERTEX "models/picker.dae"
+
 
 std::vector<std::string> labels;
 std::vector<std::string> mesh_file_names{
@@ -92,6 +94,7 @@ ModelData mesh_data_neutral_original;
 ModelData mesh_data_neutral;
 std::vector<ModelData> facialExpressions;
 
+ModelData mesh_data_vertex_picker;
 
 std::vector < std::vector<glm::vec3> > deltaMs;
 std::vector<float> mWeights;
@@ -130,6 +133,19 @@ void loadNeutral(glm::mat4& modelNeutral, int matrix_location)
 
 	glUniformMatrix4fv(matrix_location, 1, GL_FALSE, glm::value_ptr(modelNeutral));
 	glDrawArrays(GL_TRIANGLES, 0, mesh_data_neutral.mPointCount);
+}
+
+glm::vec3 pickerLocation = glm::vec3(0, 0, 0);
+void loadVertexPicker(glm::mat4& modelVertexPicker, int matrix_location)
+{
+
+	modelVertexPicker = glm::mat4(1.0f);
+	modelVertexPicker = glm::translate(modelVertexPicker,pickerLocation);
+
+	generateObjectBufferMesh(mesh_data_vertex_picker, shaderProgramID);
+
+	glUniformMatrix4fv(matrix_location, 1, GL_FALSE, glm::value_ptr(modelVertexPicker));
+	glDrawArrays(GL_TRIANGLES, 0, mesh_data_vertex_picker.mPointCount);
 }
 
 void applyDeltaM(ModelData& mesh_data_neutral, std::vector<glm::vec3> deltaM, float weight)
@@ -191,6 +207,8 @@ void getMouseLocation(int x, int y, glm::mat4 VM, glm::mat4 P, int chosenVertexI
 
 	glm::vec3 targetVerticePos = glm::unProject(window, VM, P, glm::vec4(0.0f, 0.0f, width, height));
 
+	pickerLocation = targetVerticePos;
+
 	if (targetVerticePos.z < -100.0f) {
 		cout << "OUT OF BOUNDS"<<endl;
 	}
@@ -224,7 +242,9 @@ Eigen::VectorXf blendshapeSolver(std::vector<ModelData> expressionMeshes) {
 	}
 
 	//Left side of Equation
-	Eigen::MatrixXf LHS = Bbar.transpose() * Bbar + (alpha + mu) * Eigen::MatrixXf::Identity(mesh_file_names.size(), mesh_file_names.size());
+	Eigen::MatrixXf LHS = 
+		Bbar.transpose() * Bbar + 
+		(alpha + mu) * Eigen::MatrixXf::Identity(mesh_file_names.size(), mesh_file_names.size());
 	
 	//Right Side Of Equation
 	Eigen::VectorXf RHS(mesh_file_names.size());
@@ -236,20 +256,15 @@ Eigen::VectorXf blendshapeSolver(std::vector<ModelData> expressionMeshes) {
 		mWeightsCurrent(i) = mWeights[i];
 	}
 	cout << endl;
-
 	cout << "eigen mWeightsCurrent: " << mWeightsCurrent << endl;
-
-	
 
 	RHS = Bbar.transpose() * (m - m0) + alpha * mWeightsCurrent;
 	
 	//solve Equation
 	Eigen::LDLT<Eigen::MatrixXf> solver(LHS);
 	Eigen::VectorXf mWeightsNew = solver.solve(RHS);
-
 	cout << "eigen mWeightsNEW: " << mWeightsNew << endl;
 	
-
 	return mWeightsNew;
 	
 }
@@ -315,6 +330,9 @@ void display() {
 	glm::mat4 modelNeutralFace;
 	loadNeutral(modelNeutralFace, matrix_location);
 
+	glm::mat4 modelVertexPicker;
+	loadVertexPicker(modelVertexPicker, matrix_location);
+
 	glutSwapBuffers();
 	
 }
@@ -367,7 +385,7 @@ void updateScene() {
 		glm::vec3 mouseVertex = vertexPicker((int) mousePosDown.x, (int) mousePosDown.y, view, persp_proj, mesh_data_neutral);
 		//std::cout << "mesh index " << mesh_index << std::endl;
 		//std::cout << "chosen vertix is: " << glm::to_string(mouseVertex) << std::endl;
-
+		pickerLocation = mouseVertex;
 		mouseClickedDown = false;
 	}
 	if (mouseClickedUp) {
@@ -470,6 +488,7 @@ void init()
 
 	mesh_data_neutral = load_mesh(MESH_NEUTRAL);
 	mesh_data_neutral_original = load_mesh(MESH_NEUTRAL);
+	mesh_data_vertex_picker = load_mesh(MESH_VERTEX);
 
 	std::cout << "Calculating deltaM vertices..." << std::endl;
 	for (std::string name : mesh_file_names) {
