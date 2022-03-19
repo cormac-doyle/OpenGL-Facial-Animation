@@ -188,7 +188,6 @@ glm::vec3 vertexPicker(int x, int y, glm::mat4 VM, glm::mat4 P, ModelData curren
 			
 	}
 	
-
 	glm::vec3 vertex = currentFaceMesh.mVertices[v_index];
 	constraints_index.push_back(v_index); //add index of constrained vertex to list of constraints
 	m0.conservativeResize(constraints_index.size() * 3);
@@ -467,6 +466,8 @@ void read_anim_text_file() {
 	newfile.close(); //close the file object.
 	}
 }
+
+
 
 //found in power point real-time animation slides
 
