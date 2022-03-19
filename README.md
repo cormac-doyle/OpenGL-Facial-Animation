@@ -1,7 +1,7 @@
 # OpenGL Facial Animation using Blendshapes
 
 <p align="center">
-  <img src="![ezgif com-gif-maker (7)](https://user-images.githubusercontent.com/57908067/159114571-257580ae-3b09-4ac6-bd95-86b62837675f.gif)" alt="animated" />
+  <img src="![ezgif com-gif-maker (7)](https://user-images.githubusercontent.com/57908067/159114571-257580ae-3b09-4ac6-bd95-86b62837675f.gif)" />
 </p>
 
 ## Vertex Manipulation using mouse click
